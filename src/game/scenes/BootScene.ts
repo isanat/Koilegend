@@ -25,22 +25,22 @@ export class BootScene extends Phaser.Scene {
       }
     });
 
-    // Sprites with relative paths
-    this.loadImage('koi', 'game/sprites/koi.png');
-    this.loadImage('koi-dragon', 'game/sprites/koi-dragon.png');
-    this.loadImage('rock', 'game/sprites/rock.png');
-    this.loadImage('pearl', 'game/sprites/pearl.png');
-    this.loadImage('predator', 'game/sprites/predator.png');
-    this.loadImage('whirlpool', 'game/sprites/whirlpool.png');
-    this.loadImage('dragon-final', 'game/sprites/dragon-final.png');
+    // Sprites with absolute paths
+    this.loadImage('koi', '/game/sprites/koi.png');
+    this.loadImage('koi-dragon', '/game/sprites/koi-dragon.png');
+    this.loadImage('rock', '/game/sprites/rock.png');
+    this.loadImage('pearl', '/game/sprites/pearl.png');
+    this.loadImage('predator', '/game/sprites/predator.png');
+    this.loadImage('whirlpool', '/game/sprites/whirlpool.png');
+    this.loadImage('dragon-final', '/game/sprites/dragon-final.png');
 
-    // Scenes with relative paths
-    this.loadImage('river-bg-far', 'game/scenes/river-bg-far.jpg');
-    this.loadImage('river-bg-mid', 'game/scenes/river-bg-mid.jpg');
-    this.loadImage('river-bg-near', 'game/scenes/river-bg-near.jpg');
-    this.loadImage('waterfall-bg', 'game/scenes/waterfall-bg.jpg');
-    this.loadImage('hero-legend', 'game/scenes/hero-legend.jpg');
-    this.loadImage('sky-realm', 'game/scenes/sky-realm.png');
+    // Scenes with absolute paths
+    this.loadImage('river-bg-far', '/game/scenes/river-bg-far.jpg');
+    this.loadImage('river-bg-mid', '/game/scenes/river-bg-mid.jpg');
+    this.loadImage('river-bg-near', '/game/scenes/river-bg-near.jpg');
+    this.loadImage('waterfall-bg', '/game/scenes/waterfall-bg.jpg');
+    this.loadImage('hero-legend', '/game/scenes/hero-legend.jpg');
+    this.loadImage('sky-realm', '/game/scenes/sky-realm.png');
 
     // Loading bar
     const { width, height } = this.scale;
@@ -65,13 +65,138 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
+    this.processLoadedImageTextures();
+    this.generateFallbacks();
+
     // Read target scene from registry (set by KoiGame before game starts)
     const target = (this.registry.get('targetScene') as string) || 'RiverScene';
     const launchData = this.registry.get('bootLaunchData') || {};
     // Start target scene
     this.time.delayedCall(50, () => {
-      this.generateFallbacks();
       this.scene.start(target, launchData);
+    });
+  }
+
+  /**
+   * Process loaded artwork textures: removes dark background chromakey and generates
+   * undulating swim animation frames from the realistic AI artwork image.
+   */
+  private processLoadedImageTextures() {
+    // 1. Process Koi image to create 8 undulating swim frames
+    if (this.textures.exists('koi') && !this._missingKeys.has('koi')) {
+      const tex = this.textures.get('koi');
+      const img = tex.getSourceImage() as HTMLImageElement;
+      if (img && img.width > 0) {
+        // Create base clean canvas with chromakey removed
+        const baseCanvas = document.createElement('canvas');
+        baseCanvas.width = img.width;
+        baseCanvas.height = img.height;
+        const bCtx = baseCanvas.getContext('2d');
+        if (bCtx) {
+          bCtx.drawImage(img, 0, 0);
+          const imgData = bCtx.getImageData(0, 0, img.width, img.height);
+          const data = imgData.data;
+          for (let i = 0; i < data.length; i += 4) {
+            // Remove dark black background corners (threshold < 20)
+            if (data[i] < 22 && data[i + 1] < 22 && data[i + 2] < 22) {
+              data[i + 3] = 0;
+            }
+          }
+          bCtx.putImageData(imgData, 0, 0);
+
+          // Generate 8 swim frames with organic tail wave deformation
+          for (let f = 0; f < 8; f++) {
+            const frameKey = `koi-swim-${f}`;
+            if (this.textures.exists(frameKey)) {
+              try { this.textures.remove(frameKey); } catch {}
+            }
+            const fCanvas = document.createElement('canvas');
+            fCanvas.width = img.width;
+            fCanvas.height = img.height;
+            const fCtx = fCanvas.getContext('2d');
+            if (fCtx) {
+              const sliceW = 4;
+              const numSlices = Math.floor(img.width / sliceW);
+              const phase = (f / 8) * Math.PI * 2;
+              for (let s = 0; s < numSlices; s++) {
+                const sx = s * sliceW;
+                // Deform y progressively towards the tail (right side)
+                const tailFactor = Math.max(0, (sx - img.width * 0.35) / (img.width * 0.65));
+                const offsetY = Math.sin(phase + (sx / img.width) * Math.PI * 2) * 12 * tailFactor;
+                fCtx.drawImage(
+                  baseCanvas,
+                  sx, 0, sliceW, img.height,
+                  sx, offsetY, sliceW, img.height
+                );
+              }
+              this.textures.addCanvas(frameKey, fCanvas);
+            }
+          }
+
+          // Generate dash frames
+          for (let df = 0; df < 3; df++) {
+            const dKey = `koi-dash-${df}`;
+            if (this.textures.exists(dKey)) {
+              try { this.textures.remove(dKey); } catch {}
+            }
+            const dCanvas = document.createElement('canvas');
+            dCanvas.width = img.width * 1.1;
+            dCanvas.height = img.height;
+            const dCtx = dCanvas.getContext('2d');
+            if (dCtx) {
+              dCtx.shadowColor = '#fbbf24';
+              dCtx.shadowBlur = 15;
+              dCtx.drawImage(baseCanvas, 0, 0, dCanvas.width, dCanvas.height);
+              this.textures.addCanvas(dKey, dCanvas);
+            }
+          }
+
+          // Generate hurt frame
+          const hKey = 'koi-hurt';
+          if (this.textures.exists(hKey)) {
+            try { this.textures.remove(hKey); } catch {}
+          }
+          const hCanvas = document.createElement('canvas');
+          hCanvas.width = img.width;
+          hCanvas.height = img.height;
+          const hCtx = hCanvas.getContext('2d');
+          if (hCtx) {
+            hCtx.drawImage(baseCanvas, 0, 0);
+            hCtx.globalCompositeOperation = 'source-atop';
+            hCtx.fillStyle = 'rgba(239, 68, 68, 0.45)';
+            hCtx.fillRect(0, 0, img.width, img.height);
+            this.textures.addCanvas(hKey, hCanvas);
+          }
+        }
+      }
+    }
+
+    // 2. Process background & obstacle chromakeys (rock, predator, pearl)
+    const keysToClean = ['rock', 'predator', 'pearl'];
+    keysToClean.forEach((k) => {
+      if (this.textures.exists(k) && !this._missingKeys.has(k)) {
+        const tex = this.textures.get(k);
+        const img = tex.getSourceImage() as HTMLImageElement;
+        if (img && img.width > 0) {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            const imgData = ctx.getImageData(0, 0, img.width, img.height);
+            const data = imgData.data;
+            for (let i = 0; i < data.length; i += 4) {
+              if (data[i] < 22 && data[i + 1] < 22 && data[i + 2] < 22) {
+                data[i + 3] = 0;
+              }
+            }
+            ctx.putImageData(imgData, 0, 0);
+            this.textures.remove(k);
+            this.textures.addCanvas(k, canvas);
+          }
+        }
+      }
     });
   }
 

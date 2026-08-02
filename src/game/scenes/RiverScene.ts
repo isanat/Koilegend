@@ -88,13 +88,13 @@ export class RiverScene extends BaseGameScene {
     // Deep water base
     this.add.rectangle(0, 0, width, height, 0x0a1929).setOrigin(0, 0).setScrollFactor(0).setDepth(-10);
 
-    // Parallax 3 layers
+    // Parallax 3 layers with blend modes for realistic aquatic atmosphere
     this.bgFar = this.add.tileSprite(0, 0, width, height, 'river-bg-far')
-      .setOrigin(0, 0).setScrollFactor(0).setAlpha(0.65).setDepth(-5);
+      .setOrigin(0, 0).setScrollFactor(0).setAlpha(0.95).setDepth(-5);
     this.bgMid = this.add.tileSprite(0, 0, width, height, 'river-bg-mid')
-      .setOrigin(0, 0).setScrollFactor(0).setAlpha(0.8).setDepth(-4);
+      .setOrigin(0, 0).setScrollFactor(0).setAlpha(0.45).setBlendMode('ADD').setDepth(-4);
     this.bgNear = this.add.tileSprite(0, 0, width, height, 'river-bg-near')
-      .setOrigin(0, 0).setScrollFactor(0).setAlpha(0.9).setDepth(-3);
+      .setOrigin(0, 0).setScrollFactor(0).setAlpha(0.25).setBlendMode('SCREEN').setDepth(-3);
 
     // God rays
     const rays = this.add.graphics().setScrollFactor(0).setDepth(-2);
