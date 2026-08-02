@@ -6,14 +6,36 @@
 import { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import { BootScene } from '@/game/scenes/BootScene';
-import { RiverScene, type RiverResult } from '@/game/scenes/RiverScene';
-import { WaterfallScene, type WaterfallResult } from '@/game/scenes/WaterfallScene';
-import { WhirlpoolScene, type WhirlpoolResult } from '@/game/scenes/WhirlpoolScene';
-import { StormScene, type StormResult } from '@/game/scenes/StormScene';
+import { RiverScene } from '@/game/scenes/RiverScene';
+import { PredatorScene } from '@/game/scenes/PredatorScene';
+import { CurrentsScene } from '@/game/scenes/CurrentsScene';
+import { PeerPressureScene } from '@/game/scenes/PeerPressureScene';
+import { WhirlpoolScene } from '@/game/scenes/WhirlpoolScene';
+import { NightScene } from '@/game/scenes/NightScene';
+import { StormScene } from '@/game/scenes/StormScene';
+import { FallenTreeScene } from '@/game/scenes/FallenTreeScene';
+import { ThornsScene } from '@/game/scenes/ThornsScene';
+import { RiverSpiritScene } from '@/game/scenes/RiverSpiritScene';
+import { WaterfallScene } from '@/game/scenes/WaterfallScene';
+import { DragonAscensionScene } from '@/game/scenes/DragonAscensionScene';
 import { PhaserDebugOverlay } from '@/game/debug/PhaserDebugOverlay';
+import type { BaseResult } from '@/game/scenes/BaseGameScene';
 
-export type GameSceneKey = 'RiverScene' | 'WhirlpoolScene' | 'StormScene' | 'WaterfallScene';
-export type GameResult = RiverResult | WhirlpoolResult | StormResult | WaterfallResult;
+export type GameSceneKey =
+  | 'RiverScene'
+  | 'PredatorScene'
+  | 'CurrentsScene'
+  | 'PeerPressureScene'
+  | 'WhirlpoolScene'
+  | 'NightScene'
+  | 'StormScene'
+  | 'FallenTreeScene'
+  | 'ThornsScene'
+  | 'RiverSpiritScene'
+  | 'WaterfallScene'
+  | 'DragonAscensionScene';
+
+export type GameResult = BaseResult;
 
 type Props = {
   scene: GameSceneKey;
@@ -52,7 +74,21 @@ export function KoiGame({ scene, equippedNft, onResult, onQuit, className }: Pro
         height: isWaterfall ? 1280 : 720,
       },
       render: { antialias: true, pixelArt: false, powerPreference: 'high-performance' },
-      scene: [BootScene, RiverScene, WhirlpoolScene, StormScene, WaterfallScene],
+      scene: [
+        BootScene,
+        RiverScene,
+        PredatorScene,
+        CurrentsScene,
+        PeerPressureScene,
+        WhirlpoolScene,
+        NightScene,
+        StormScene,
+        FallenTreeScene,
+        ThornsScene,
+        RiverSpiritScene,
+        WaterfallScene,
+        DragonAscensionScene,
+      ],
     };
 
     let game: Phaser.Game | null = null;
@@ -69,7 +105,6 @@ export function KoiGame({ scene, equippedNft, onResult, onQuit, className }: Pro
       if (game.isBooted) {
         setReady(true);
       } else {
-        // Fallback timer to ensure ready is set
         setTimeout(() => setReady(true), 200);
       }
     } catch (e: any) {

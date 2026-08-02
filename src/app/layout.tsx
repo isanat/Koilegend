@@ -35,6 +35,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { AppProviders } from "@/components/providers/AppProviders";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -45,8 +47,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} antialiased bg-background text-foreground min-h-screen flex flex-col`}
       >
-        {children}
-        <Toaster />
+        <AppProviders>
+          {children}
+          <Toaster />
+        </AppProviders>
       </body>
     </html>
   );

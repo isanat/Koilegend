@@ -2,7 +2,9 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { PHASES, type GamePhase } from '@/lib/game-data';
-import { Gamepad2, Trophy, Coins, Play, ChevronRight, Sparkles, Maximize2, Move } from 'lucide-react';
+import { useWeb3Game } from '@/context/Web3GameStateContext';
+import { Gamepad2, Trophy, Coins, Play, ChevronRight, Sparkles, Move, Lock, CheckCircle2, ShieldAlert } from 'lucide-react';
+import type { BaseResult } from '@/game/scenes/BaseGameScene';
 
 const KoiGame = dynamic(() => import('@/game/KoiGame').then((m) => m.KoiGame), {
   ssr: false,
@@ -16,106 +18,141 @@ const KoiGame = dynamic(() => import('@/game/KoiGame').then((m) => m.KoiGame), {
   ),
 });
 
-type Result = {
-  status: string;
-  pearls: number;
-  timeSurvived: number;
-  score: number;
-};
-
 export function GameSection() {
+  const {
+    koiBalance,
+    payEntryFee,
+    stagesProgress,
+    completeStage,
+    nftCards,
+    equippedNft,
+    equipNft,
+    addTokens,
+  } = useWeb3Game();
+
   const [playing, setPlaying] = useState(false);
   const [activePhase, setActivePhase] = useState<GamePhase>(PHASES[0]);
-  const [equippedNft, setEquippedNft] = useState<string | null>(null);
-  const [lastResult, setLastResult] = useState<Result | null>(null);
-  const [history, setHistory] = useState<Result[]>([]);
+  const [lastResult, setLastResult] = useState<BaseResult | null>(null);
+  const [history, setHistory] = useState<BaseResult[]>([]);
+  const [balanceError, setBalanceError] = useState(false);
 
-  const playablePhases = PHASES.filter((p) => p.playable);
+  const handleStartStage = () => {
+    setBalanceError(false);
+    const progress = stagesProgress[activePhase.id];
+    if (progress && !progress.unlocked) {
+      return; // Locked stage
+    }
 
-  const handleResult = (r: Result) => {
+    // Pay entry fee in $KOI tokens
+    const success = payEntryFee(activePhase.entryCost);
+    if (!success) {
+      setBalanceError(true);
+      return;
+    }
+
+    setPlaying(true);
+    setLastResult(null);
+  };
+
+  const handleResult = (r: BaseResult) => {
     setLastResult(r);
     setHistory((h) => [r, ...h].slice(0, 5));
     setPlaying(false);
+
+    if (r.status === 'win') {
+      const stars = r.hitsTaken === 0 ? 3 : r.hitsTaken <= 2 ? 2 : 1;
+      completeStage(activePhase.id, r.score, stars, activePhase.reward);
+    }
   };
+
+  const currentStageProgress = stagesProgress[activePhase.id] || { unlocked: false, completed: false, stars: 0 };
+  const ownedNfts = nftCards.filter((c) => c.owned);
 
   return (
     <section id="jogar" className="relative py-24 px-6 scroll-mt-20 bg-slate-950/60">
       {/* Ambient background glow */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-25 blur-3xl"
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-25 blur-3xl transition-all duration-700"
           style={{ background: `radial-gradient(circle, ${activePhase.color}, transparent 70%)` }}
         />
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Section header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-panel mb-4 border border-emerald-500/30">
             <Gamepad2 className="w-4 h-4 text-emerald-400" />
             <span className="text-[11px] font-semibold tracking-[0.25em] text-emerald-300 uppercase">
-              Demo Jogável
+              12 Etapas da Lenda
             </span>
           </div>
           <h2 className="font-mythic text-4xl sm:text-5xl md:text-6xl font-bold mb-4 text-gold-gradient">
-            Experimente a Lenda
+            Arena das 12 Provas
           </h2>
           <p className="text-slate-200 max-w-2xl mx-auto leading-relaxed text-base sm:text-lg">
-            Duas etapas jogáveis de verdade, com física, partículas e polimento.
-            Mova com o mouse, WASD ou toque.
+            Navegue por todas as 12 etapas da lenda, do Rio Turbulento até a Ascensão Celestial como Dragão Dourado!
           </p>
         </div>
 
-        {/* Phase selector tabs */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
-          {playablePhases.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => {
-                setActivePhase(p);
-                setPlaying(false);
-                setLastResult(null);
-              }}
-              className={`group relative flex items-center gap-3 px-6 py-3.5 rounded-xl border transition-all cursor-pointer ${
-                activePhase.id === p.id
-                  ? 'border-amber-400 bg-amber-500/20 shadow-lg shadow-amber-500/20 text-amber-100'
-                  : 'border-slate-800 bg-slate-900/80 text-slate-300 hover:border-amber-500/40 hover:bg-slate-800'
-              }`}
-            >
-              <span className="text-2xl">{p.icon}</span>
-              <div className="text-left">
-                <div className="font-mythic text-sm font-semibold text-amber-200">
-                  Etapa {p.id}
+        {/* Phase selector tabs (All 12 stages!) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5 mb-8">
+          {PHASES.map((p) => {
+            const prog = stagesProgress[p.id] || { unlocked: false, completed: false };
+            const isSelected = activePhase.id === p.id;
+
+            return (
+              <button
+                key={p.id}
+                onClick={() => {
+                  setActivePhase(p);
+                  setPlaying(false);
+                  setLastResult(null);
+                  setBalanceError(false);
+                }}
+                className={`relative flex items-center gap-2.5 p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  isSelected
+                    ? 'border-amber-400 bg-amber-500/20 shadow-lg shadow-amber-500/20 text-amber-100 ring-1 ring-amber-400/50'
+                    : prog.unlocked
+                    ? 'border-slate-800 bg-slate-900/80 text-slate-300 hover:border-amber-500/40 hover:bg-slate-800'
+                    : 'border-slate-900 bg-slate-950/60 text-slate-600 opacity-75'
+                }`}
+              >
+                <span className="text-2xl">{p.icon}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mythic text-[11px] font-bold text-amber-300 uppercase">
+                      Etapa {p.id}
+                    </span>
+                    {!prog.unlocked ? (
+                      <Lock className="w-3 h-3 text-slate-500" />
+                    ) : prog.completed ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : null}
+                  </div>
+                  <div className="text-xs text-slate-200 truncate font-medium">
+                    {p.title}
+                  </div>
                 </div>
-                <div className="text-xs text-slate-300 max-w-[180px] truncate">
-                  {p.title}
-                </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
 
         {/* Main game area */}
-        <div className="grid lg:grid-cols-[1fr_300px] gap-6">
+        <div className="grid lg:grid-cols-[1fr_320px] gap-6">
           <div className="space-y-4">
             {!playing ? (
               /* === Intro Screen Card === */
-              <div className="relative min-h-[420px] aspect-video rounded-2xl overflow-hidden border border-amber-500/30 shadow-2xl bg-slate-900 flex flex-col justify-end p-6 sm:p-10">
+              <div className="relative min-h-[440px] aspect-video rounded-2xl overflow-hidden border border-amber-500/30 shadow-2xl bg-slate-900 flex flex-col justify-end p-6 sm:p-10">
                 {/* Background gradient art */}
                 <div
-                  className="absolute inset-0"
+                  className="absolute inset-0 transition-colors duration-700"
                   style={{
-                    background:
-                      activePhase.id === 1
-                        ? 'radial-gradient(circle at 70% 30%, #1e3a8a 0%, #0f172a 70%, #020617 100%)'
-                        : activePhase.id === 5
-                        ? 'radial-gradient(circle at 60% 40%, #2e1065 0%, #0f172a 70%, #020617 100%)'
-                        : activePhase.id === 7
-                        ? 'radial-gradient(circle at 50% 30%, #1d4ed8 0%, #0f172a 70%, #020617 100%)'
-                        : 'radial-gradient(circle at 50% 20%, #78350f 0%, #0f172a 70%, #020617 100%)',
+                    background: `radial-gradient(circle at 60% 40%, ${activePhase.color}33 0%, #0f172a 70%, #020617 100%)`,
                   }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-transparent" />
                 <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/40 to-transparent" />
 
                 {/* Card Content */}
@@ -123,8 +160,15 @@ export function GameSection() {
                   <div className="flex items-center gap-3 mb-3">
                     <span className="text-5xl drop-shadow-lg">{activePhase.icon}</span>
                     <div>
-                      <div className="text-xs uppercase tracking-[0.3em] text-amber-400 font-semibold mb-0.5">
-                        Etapa {String(activePhase.id).padStart(2, '0')} de 12
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs uppercase tracking-[0.3em] text-amber-400 font-semibold">
+                          Etapa {String(activePhase.id).padStart(2, '0')} de 12
+                        </span>
+                        {currentStageProgress.completed && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            Concluída ({currentStageProgress.stars} ★)
+                          </span>
+                        )}
                       </div>
                       <h3 className="font-mythic text-3xl sm:text-4xl font-bold text-amber-100 drop-shadow-md">
                         {activePhase.title}
@@ -135,54 +179,92 @@ export function GameSection() {
                   <p className="text-amber-200/90 italic text-base mb-3 font-mythic">
                     {activePhase.subtitle}
                   </p>
-                  <p className="text-sm sm:text-base text-slate-100 mb-6 leading-relaxed max-w-lg">
+                  <p className="text-sm sm:text-base text-slate-100 mb-5 leading-relaxed max-w-lg">
                     {activePhase.challenge}
                   </p>
 
-                  {/* Economy stats */}
-                  <div className="flex flex-wrap items-center gap-3 mb-6">
+                  {/* Economy stats & Costs */}
+                  <div className="flex flex-wrap items-center gap-3 mb-5">
                     <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-slate-950/80 border border-amber-500/30">
                       <Coins className="w-4 h-4 text-amber-400" />
                       <span className="text-xs text-slate-300">Entrada:</span>
-                      <span className="text-sm font-bold text-amber-300">{activePhase.entryCost}</span>
+                      <span className="text-sm font-bold text-amber-300">{activePhase.entryCost} $KOI</span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-500 hidden sm:block" />
                     <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-slate-950/80 border border-emerald-500/30">
                       <Trophy className="w-4 h-4 text-emerald-400" />
                       <span className="text-xs text-slate-300">Recompensa:</span>
-                      <span className="text-sm font-bold text-emerald-300">{activePhase.reward}</span>
+                      <span className="text-sm font-bold text-emerald-300">{activePhase.reward} $PEARL</span>
                     </div>
                   </div>
+
+                  {/* Balance Error alert */}
+                  {balanceError && (
+                    <div className="mb-4 p-3 rounded-xl bg-red-950/80 border border-red-500/40 text-red-200 text-xs flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <ShieldAlert className="w-4 h-4 text-red-400 shrink-0" />
+                        <span>Saldo insuficiente de $KOI ({koiBalance} $KOI). Colete no Faucet ou Mineração!</span>
+                      </div>
+                      <button
+                        onClick={() => addTokens(50, 0)}
+                        className="px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold hover:bg-amber-500/30"
+                      >
+                        +50 $KOI Faucet
+                      </button>
+                    </div>
+                  )}
 
                   {/* Start Button & Equipment */}
                   <div className="flex flex-wrap items-center gap-4">
                     <button
-                      onClick={() => setPlaying(true)}
-                      className="btn-gold inline-flex items-center gap-3 px-8 py-4 rounded-full font-bold text-lg shadow-xl cursor-pointer hover:scale-105 transition-transform"
+                      onClick={handleStartStage}
+                      disabled={!currentStageProgress.unlocked}
+                      className={`inline-flex items-center gap-3 px-8 py-4 rounded-full font-bold text-lg shadow-xl cursor-pointer transition-all ${
+                        currentStageProgress.unlocked
+                          ? 'btn-gold hover:scale-105'
+                          : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                      }`}
                     >
-                      <Play className="w-5 h-5 fill-current text-slate-950" />
-                      Iniciar Etapa
+                      {currentStageProgress.unlocked ? (
+                        <>
+                          <Play className="w-5 h-5 fill-current text-slate-950" />
+                          Entrar na Etapa ({activePhase.entryCost} $KOI)
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="w-5 h-5 text-slate-500" />
+                          Complete Etapa {activePhase.id - 1} Primeiro
+                        </>
+                      )}
                     </button>
 
+                    {/* NFT Equipment Selector */}
                     <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-950/90 border border-amber-500/40 backdrop-blur-md">
                       <Sparkles className="w-4 h-4 text-sky-400" />
-                      <span className="text-xs text-slate-200 font-medium">NFT:</span>
+                      <span className="text-xs text-slate-200 font-medium">Equipar NFT:</span>
                       <select
-                        value={equippedNft ?? ''}
-                        onChange={(e) => setEquippedNft(e.target.value || null)}
+                        value={equippedNft?.id ?? ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (!val) equipNft(0);
+                          else equipNft(Number(val));
+                        }}
                         className="bg-transparent text-xs text-amber-300 font-bold focus:outline-none cursor-pointer"
                       >
-                        <option value="" className="bg-slate-900 text-slate-300">Nenhum (Padrão)</option>
-                        <option value="Predador" className="bg-slate-900 text-amber-300">Predador (+1 Coração)</option>
-                        <option value="Força do Koi" className="bg-slate-900 text-amber-300">Força do Koi (Dash +80%)</option>
-                        <option value="Calmaria na Tempestade" className="bg-slate-900 text-amber-300">Calmaria na Tempestade (Escudo)</option>
-                        <option value="Salto Lendário" className="bg-slate-900 text-amber-300">Salto Lendário (Ímã)</option>
+                        <option value="" className="bg-slate-900 text-slate-300">
+                          Nenhum (Padrão)
+                        </option>
+                        {ownedNfts.map((nft) => (
+                          <option key={nft.id} value={nft.id} className="bg-slate-900 text-amber-300">
+                            {nft.name} ({nft.rarity})
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
                 </div>
 
-                {/* Corner watermark */}
+                {/* Watermark */}
                 <div className="absolute top-6 right-6 font-mythic text-7xl sm:text-8xl font-black text-amber-500/10 select-none pointer-events-none">
                   {String(activePhase.id).padStart(2, '0')}
                 </div>
@@ -191,9 +273,9 @@ export function GameSection() {
               /* === Active Game Canvas === */
               <div className="w-full relative rounded-2xl overflow-hidden border border-amber-500/40 bg-slate-950 shadow-2xl">
                 <KoiGame
-                  key={`${activePhase.id}-${equippedNft}`}
+                  key={`${activePhase.id}-${equippedNft?.name ?? 'default'}`}
                   scene={(activePhase.sceneKey as any) || 'RiverScene'}
-                  equippedNft={equippedNft}
+                  equippedNft={equippedNft?.name ?? null}
                   onResult={handleResult}
                   onQuit={() => setPlaying(false)}
                 />
@@ -220,8 +302,33 @@ export function GameSection() {
             )}
           </div>
 
-          {/* Right sidebar — Results & Demo note */}
+          {/* Right sidebar — Results & Token balances */}
           <div className="space-y-4">
+            {/* Wallet Balances Card */}
+            <div className="glass-panel p-5 rounded-2xl border border-amber-500/30 bg-slate-900/80">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-mythic font-bold text-amber-200 text-xs tracking-wider uppercase">
+                  Saldo da Carteira
+                </h4>
+                <button
+                  onClick={() => addTokens(50, 20)}
+                  className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30"
+                >
+                  + Faucet Free
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-2.5 rounded-xl bg-slate-950 border border-amber-500/20">
+                  <div className="text-[10px] text-slate-400">Token $KOI</div>
+                  <div className="text-lg font-bold text-amber-300">{koiBalance}</div>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-950 border border-emerald-500/20">
+                  <div className="text-[10px] text-slate-400">Token $PEARL</div>
+                  <div className="text-lg font-bold text-emerald-300">{useWeb3Game().pearlBalance}</div>
+                </div>
+              </div>
+            </div>
+
             {/* Last result */}
             <div className="glass-panel p-5 rounded-2xl border border-amber-500/30">
               <div className="flex items-center gap-2 mb-3">
@@ -258,7 +365,7 @@ export function GameSection() {
                 </div>
               ) : (
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Jogue uma partida para ver seus resultados detalhados aqui.
+                  Jogue uma partida para ganhar $KOI e $PEARL em tempo real.
                 </p>
               )}
             </div>
@@ -267,7 +374,7 @@ export function GameSection() {
             {history.length > 0 && (
               <div className="glass-panel p-5 rounded-2xl border border-amber-500/20">
                 <h4 className="font-mythic font-bold text-amber-200 text-xs tracking-wider uppercase mb-3">
-                  Histórico de Sessões
+                  Histórico da Sessão
                 </h4>
                 <div className="space-y-2">
                   {history.map((h, i) => (
@@ -285,24 +392,9 @@ export function GameSection() {
                 </div>
               </div>
             )}
-
-            {/* Simulation card */}
-            <div className="p-5 rounded-2xl bg-slate-900/90 border border-amber-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="w-4 h-4 text-sky-400" />
-                <h5 className="font-mythic text-xs font-bold text-amber-200 uppercase tracking-wider">
-                  Demonstração
-                </h5>
-              </div>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Versão offline com economia simulada. Na versão Web3 completa, o acesso às fases é
-                liberado por tokens e NFTs na carteira.
-              </p>
-            </div>
           </div>
         </div>
       </div>
     </section>
   );
 }
-
