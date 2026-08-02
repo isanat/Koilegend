@@ -10,6 +10,7 @@ import { RiverScene, type RiverResult } from '@/game/scenes/RiverScene';
 import { WaterfallScene, type WaterfallResult } from '@/game/scenes/WaterfallScene';
 import { WhirlpoolScene, type WhirlpoolResult } from '@/game/scenes/WhirlpoolScene';
 import { StormScene, type StormResult } from '@/game/scenes/StormScene';
+import { EngineDebugOverlayPanel } from '@/engine/debug/EngineDebugOverlay';
 
 export type GameSceneKey = 'RiverScene' | 'WhirlpoolScene' | 'StormScene' | 'WaterfallScene';
 export type GameResult = RiverResult | WhirlpoolResult | StormResult | WaterfallResult;
@@ -102,6 +103,7 @@ export function KoiGame({ scene, equippedNft, onResult, onQuit, className }: Pro
           <div className="text-red-400 font-sans text-sm">Erro: {error}</div>
         </div>
       )}
+      <EngineDebugOverlayPanel />
     </div>
   );
 }
