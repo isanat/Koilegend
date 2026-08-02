@@ -12,31 +12,35 @@ export class BootScene extends Phaser.Scene {
     super('BootScene');
   }
 
-  preload() {
+  init() {
     this._missingKeys.clear();
+    // Pre-generate procedural textures so Phaser TextureManager has valid keys for every asset immediately
+    this.generateFallbacks();
+  }
 
+  preload() {
     this.load.on('loaderror', (fileObj: any) => {
       if (fileObj && fileObj.key) {
         this._missingKeys.add(fileObj.key);
       }
     });
 
-    // Sprites
-    this.loadImage('koi', '/game/sprites/koi.png');
-    this.loadImage('koi-dragon', '/game/sprites/koi-dragon.png');
-    this.loadImage('rock', '/game/sprites/rock.png');
-    this.loadImage('pearl', '/game/sprites/pearl.png');
-    this.loadImage('predator', '/game/sprites/predator.png');
-    this.loadImage('whirlpool', '/game/sprites/whirlpool.png');
-    this.loadImage('dragon-final', '/game/sprites/dragon-final.png');
+    // Sprites with relative paths
+    this.loadImage('koi', 'game/sprites/koi.png');
+    this.loadImage('koi-dragon', 'game/sprites/koi-dragon.png');
+    this.loadImage('rock', 'game/sprites/rock.png');
+    this.loadImage('pearl', 'game/sprites/pearl.png');
+    this.loadImage('predator', 'game/sprites/predator.png');
+    this.loadImage('whirlpool', 'game/sprites/whirlpool.png');
+    this.loadImage('dragon-final', 'game/sprites/dragon-final.png');
 
-    // Scenes
-    this.loadImage('river-bg-far', '/game/scenes/river-bg-far.png');
-    this.loadImage('river-bg-mid', '/game/scenes/river-bg-mid.png');
-    this.loadImage('river-bg-near', '/game/scenes/river-bg-near.png');
-    this.loadImage('waterfall-bg', '/game/scenes/waterfall-bg.png');
-    this.loadImage('hero-legend', '/game/scenes/hero-legend.png');
-    this.loadImage('sky-realm', '/game/scenes/sky-realm.png');
+    // Scenes with relative paths
+    this.loadImage('river-bg-far', 'game/scenes/river-bg-far.png');
+    this.loadImage('river-bg-mid', 'game/scenes/river-bg-mid.png');
+    this.loadImage('river-bg-near', 'game/scenes/river-bg-near.png');
+    this.loadImage('waterfall-bg', 'game/scenes/waterfall-bg.png');
+    this.loadImage('hero-legend', 'game/scenes/hero-legend.png');
+    this.loadImage('sky-realm', 'game/scenes/sky-realm.png');
 
     // Loading bar
     const { width, height } = this.scale;
