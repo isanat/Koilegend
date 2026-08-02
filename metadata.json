@@ -1,0 +1,8 @@
+{
+  "name": "Koi Legend",
+  "description": "Jogo Web3 baseado na lenda do peixe Koi que se transforma em dragão. Desafios, cartas NFT e economia tokenizada.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

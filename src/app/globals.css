@@ -1,0 +1,168 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-gold-50: #fefce8;
+  --color-gold-100: #fef9c3;
+  --color-gold-200: #fef08a;
+  --color-gold-300: #fde047;
+  --color-gold-400: #facc15;
+  --color-gold-500: #eab308;
+  --color-gold-600: #ca8a04;
+  --color-gold-700: #a16207;
+
+  --color-ink-900: #0a0e1a;
+  --color-ink-800: #0f172a;
+  --color-ink-700: #1e293b;
+  --color-ink-600: #334155;
+
+  --font-mythic: var(--font-cinzel), serif;
+}
+
+/* Koi Legend — refined mythic dark theme */
+:root {
+  --radius: 0.5rem;
+  --background: #0a0e1a;
+  --foreground: #f8fafc;
+  --card: #0f172a;
+  --card-foreground: #f8fafc;
+  --popover: #0f172a;
+  --popover-foreground: #f8fafc;
+  --primary: #facc15;
+  --primary-foreground: #0a0e1a;
+  --secondary: #1e293b;
+  --secondary-foreground: #f8fafc;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #334155;
+  --accent-foreground: #f8fafc;
+  --destructive: #ef4444;
+  --border: rgba(234, 179, 8, 0.2);
+  --input: #1e293b;
+  --ring: #facc15;
+}
+
+.dark {
+  --background: #0a0e1a;
+  --foreground: #f8fafc;
+  --card: #0f172a;
+  --card-foreground: #f8fafc;
+  --popover: #0f172a;
+  --popover-foreground: #f8fafc;
+  --primary: #facc15;
+  --primary-foreground: #0a0e1a;
+  --secondary: #1e293b;
+  --secondary-foreground: #f8fafc;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #334155;
+  --accent-foreground: #f8fafc;
+  --border: rgba(234, 179, 8, 0.2);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+  }
+  body {
+    background-color: #0a0e1a;
+    color: #f8fafc;
+    background-image:
+      radial-gradient(ellipse 90% 60% at 50% -10%, rgba(30, 58, 138, 0.4), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 100% 30%, rgba(120, 53, 15, 0.2), transparent 60%),
+      radial-gradient(ellipse 70% 50% at 0% 70%, rgba(30, 64, 175, 0.2), transparent 60%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-cinzel), serif;
+    font-weight: 700;
+  }
+  p {
+    color: #e2e8f0;
+  }
+}
+
+.font-mythic {
+  font-family: var(--font-cinzel), serif;
+}
+
+/* Gold text gradient with guaranteed solid fallback */
+.text-gold-gradient {
+  color: #fef08a;
+  background: linear-gradient(180deg, #fef9c3 0%, #fde047 40%, #eab308 70%, #fef08a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-glow-gold {
+  text-shadow:
+    0 0 30px rgba(250, 204, 21, 0.4),
+    0 0 10px rgba(250, 204, 21, 0.3);
+}
+
+.text-glow-soft {
+  text-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+}
+
+/* Glassmorphism panel */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(234, 179, 8, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Premium button */
+.btn-gold {
+  background: linear-gradient(180deg, #fde047 0%, #eab308 50%, #ca8a04 100%);
+  color: #0a0e1a;
+  box-shadow: 0 4px 14px rgba(234, 179, 8, 0.4);
+  transition: all 0.2s ease-in-out;
+}
+.btn-gold:hover, .btn-gold-hover {
+  background: linear-gradient(180deg, #fef08a 0%, #facc15 50%, #eab308 100%);
+  box-shadow: 0 6px 20px rgba(234, 179, 8, 0.6);
+  transform: translateY(-1px);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0e1a;
+}
+::-webkit-scrollbar-thumb {
+  background: #ca8a04;
+  border-radius: 6px;
+  border: 2px solid #0a0e1a;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.animate-shimmer {
+  background-size: 200% auto;
+  animation: shimmer 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
