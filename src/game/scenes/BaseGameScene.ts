@@ -330,6 +330,17 @@ export abstract class BaseGameScene extends Phaser.Scene {
       this.shieldGraphic.rotation += 1.5 * dt;
     }
 
+    // Update Koi Sprite texture based on state
+    if (this.invincible && !this.isDashing) {
+      if (this.textures.exists('koi-hurt')) this.koiBody.setTexture('koi-hurt');
+    } else if (this.isDashing) {
+      const df = Math.floor((time / 70) % 3);
+      if (this.textures.exists(`koi-dash-${df}`)) this.koiBody.setTexture(`koi-dash-${df}`);
+    } else {
+      const sf = Math.floor((time / 90) % 8);
+      if (this.textures.exists(`koi-swim-${sf}`)) this.koiBody.setTexture(`koi-swim-${sf}`);
+    }
+
     // Let subclass update
     const speedFactor = this.updateScene(dt, time);
 
@@ -504,7 +515,22 @@ export abstract class BaseGameScene extends Phaser.Scene {
       });
     }
 
-    this.cameras.main.shake(260, 0.012);
+    this.cameras.main.shake(260, 0.014);
+    // Physical knockback & squish feedback
+    this.tweens.add({
+      targets: this.koi,
+      x: this.koi.x - 28,
+      duration: 120,
+      yoyo: true,
+    });
+    this.tweens.add({
+      targets: this.koiBody,
+      scaleX: 1.35,
+      scaleY: 0.7,
+      duration: 110,
+      yoyo: true,
+    });
+
     this.tweens.add({
       targets: this.damageFlash,
       alpha: { from: 0.55, to: 0 },

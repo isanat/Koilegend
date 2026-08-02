@@ -144,7 +144,7 @@ export class PredatorScene extends BaseGameScene {
       }
 
       if (this.hitsKoi(prl, 35, 35)) {
-        this.collectPearl(prl.x, prl.y);
+        this.collectPearl(prl, 100);
         prl.destroy();
         this.pearls.splice(i, 1);
       }

@@ -103,60 +103,184 @@ export class BootScene extends Phaser.Scene {
       }
     };
 
-    // Koi fallback - vibrant orange fish
-    make('koi', 96, 56, (g) => {
+    // 1. KOI SWIM CYCLE (8 frames with organic tail undulation and scale textures)
+    for (let f = 0; f < 8; f++) {
+      const frameKey = `koi-swim-${f}`;
+      const tailAngle = Math.sin((f / 8) * Math.PI * 2) * 14;
+      make(frameKey, 110, 60, (g) => {
+        g.clear();
+        const cx = 40;
+        const cy = 30;
+
+        // Tail fin (undulating)
+        const rad = Phaser.Math.DegToRad(tailAngle);
+        const tx = cx + 32 + Math.cos(rad) * 18;
+        const ty = cy + Math.sin(rad) * 18;
+        g.fillStyle(0xea580c, 1);
+        g.fillTriangle(cx + 20, cy, tx + 12, ty - 16, tx + 12, ty + 16);
+        g.fillStyle(0xfb923c, 0.85);
+        g.fillTriangle(cx + 22, cy, tx + 10, ty - 10, tx + 10, ty + 10);
+
+        // Pectoral fins
+        g.fillStyle(0xf97316, 0.9);
+        g.fillTriangle(cx - 5, cy - 12, cx - 22, cy - 26, cx + 5, cy - 14);
+        g.fillTriangle(cx - 5, cy + 12, cx - 22, cy + 26, cx + 5, cy + 14);
+
+        // Main Koi Body (Shaded & Curved)
+        g.fillStyle(0xf97316, 1);
+        g.fillEllipse(cx, cy, 64, 34);
+
+        // Traditional Kohaku White & Black Calico Patches
+        g.fillStyle(0xffffff, 0.95);
+        g.fillEllipse(cx - 10, cy - 6, 20, 12);
+        g.fillEllipse(cx + 10, cy + 5, 16, 10);
+        g.fillStyle(0x0f172a, 0.9);
+        g.fillEllipse(cx - 2, cy + 4, 10, 6);
+        g.fillEllipse(cx + 16, cy - 4, 8, 5);
+
+        // Head highlight & Whisker (Barbel)
+        g.fillStyle(0xfb923c, 1);
+        g.fillEllipse(cx - 20, cy, 18, 16);
+        g.lineStyle(2, 0xfde68a, 0.9);
+        g.lineBetween(cx - 28, cy - 4, cx - 36, cy - 8);
+        g.lineBetween(cx - 28, cy + 4, cx - 36, cy + 8);
+
+        // Eye
+        g.fillStyle(0xffffff, 1);
+        g.fillCircle(cx - 20, cy - 6, 4);
+        g.fillStyle(0x020617, 1);
+        g.fillCircle(cx - 21, cy - 6, 2.2);
+        g.fillStyle(0xffffff, 1);
+        g.fillCircle(cx - 22, cy - 7, 0.8);
+      });
+    }
+
+    // Default 'koi' fallback points to swim frame 0
+    if (!this.textures.exists('koi') || this._missingKeys.has('koi')) {
+      make('koi', 110, 60, (g) => {
+        g.clear();
+        g.fillStyle(0xf97316, 1);
+        g.fillEllipse(50, 30, 64, 34);
+        g.fillStyle(0xffffff, 1);
+        g.fillEllipse(40, 24, 20, 12);
+        g.fillStyle(0x0f172a, 0.9);
+        g.fillCircle(48, 24, 2.5);
+      });
+    }
+
+    // 2. KOI DASH FRAMES (3 boost frames with golden trails)
+    for (let df = 0; df < 3; df++) {
+      make(`koi-dash-${df}`, 120, 60, (g) => {
+        g.clear();
+        g.fillStyle(0xfbbf24, 0.4 - df * 0.1);
+        g.fillEllipse(60, 30, 110, 48);
+        g.fillStyle(0x38bdf8, 0.8);
+        g.fillEllipse(55, 30, 75, 36);
+        g.fillStyle(0xffffff, 1);
+        g.fillEllipse(40, 24, 22, 12);
+        g.fillStyle(0x0f172a, 1);
+        g.fillCircle(38, 24, 3);
+      });
+    }
+
+    // 3. KOI HURT FRAME
+    make('koi-hurt', 110, 60, (g) => {
       g.clear();
-      g.fillStyle(0xf97316, 1);
-      g.fillEllipse(40, 28, 60, 32);
+      g.fillStyle(0xef4444, 0.9);
+      g.fillEllipse(50, 30, 68, 38);
       g.fillStyle(0xffffff, 1);
-      g.fillEllipse(28, 22, 16, 10);
-      g.fillStyle(0xea580c, 1);
-      g.fillEllipse(35, 30, 12, 8);
-      g.fillStyle(0xf97316, 1);
-      g.fillTriangle(70, 28, 92, 12, 92, 44);
-      g.fillStyle(0xfb923c, 0.8);
-      g.fillTriangle(75, 28, 88, 18, 88, 38);
-      g.fillStyle(0x1e293b, 1);
-      g.fillCircle(22, 22, 3);
-      g.fillStyle(0xffffff, 1);
-      g.fillCircle(23, 21, 1);
+      g.fillCircle(32, 24, 5);
+      g.fillStyle(0x000000, 1);
+      g.fillCircle(32, 24, 2);
     });
 
-    // Rock fallback
-    make('rock', 80, 70, (g) => {
+    // 4. TEXTURED MOSSY ROCK
+    make('rock', 90, 80, (g) => {
       g.clear();
-      g.fillStyle(0x475569, 1);
-      g.fillEllipse(40, 45, 70, 50);
+      // Outer dark outline
+      g.fillStyle(0x0f172a, 0.95);
+      g.fillEllipse(45, 42, 88, 76);
+      // Main rock stone texture
       g.fillStyle(0x334155, 1);
-      g.fillEllipse(30, 35, 20, 16);
-      g.fillStyle(0x16a34a, 0.6);
-      g.fillEllipse(50, 50, 18, 10);
+      g.fillEllipse(45, 40, 82, 70);
+      g.fillStyle(0x475569, 1);
+      g.fillEllipse(38, 32, 50, 42);
       g.fillStyle(0x64748b, 0.8);
-      g.fillEllipse(45, 40, 10, 6);
+      g.fillEllipse(32, 28, 28, 20);
+      // Aquatic Moss highlights
+      g.fillStyle(0x15803d, 0.9);
+      g.fillEllipse(55, 50, 34, 20);
+      g.fillStyle(0x22c55e, 0.8);
+      g.fillEllipse(50, 48, 22, 12);
     });
 
-    // Pearl fallback - glowing orb
-    make('pearl', 32, 32, (g) => {
+    // 5. ANIMATED SEAWEED
+    make('seaweed', 50, 120, (g) => {
       g.clear();
-      g.fillStyle(0xfbbf24, 1);
-      g.fillCircle(16, 16, 12);
-      g.fillStyle(0xfde68a, 0.9);
-      g.fillCircle(13, 13, 6);
-      g.fillStyle(0xffffff, 0.8);
-      g.fillCircle(11, 11, 3);
+      g.fillStyle(0x047857, 0.9);
+      g.fillTriangle(25, 120, 10, 0, 40, 120);
+      g.fillStyle(0x10b981, 0.85);
+      g.fillTriangle(20, 120, 30, 15, 38, 120);
     });
 
-    // Dragon fallback
-    make('dragon-final', 96, 96, (g) => {
+    // 6. PREDATOR & TELEGRAPH WARNING
+    make('predator', 100, 70, (g) => {
       g.clear();
-      g.fillStyle(0xfbbf24, 1);
-      g.fillEllipse(48, 48, 60, 40);
-      g.fillStyle(0xf59e0b, 1);
-      g.fillTriangle(20, 48, 5, 35, 5, 60);
+      // Dark menacing predatory pike
+      g.fillStyle(0x0f172a, 1);
+      g.fillEllipse(50, 35, 90, 48);
+      g.fillStyle(0x334155, 1);
+      g.fillEllipse(52, 35, 82, 40);
+      // Sharp teeth
+      g.fillStyle(0xffffff, 1);
+      g.fillTriangle(15, 30, 22, 35, 15, 40);
+      g.fillTriangle(22, 28, 28, 35, 22, 42);
+      // Red glowing eyes
+      g.fillStyle(0xef4444, 1);
+      g.fillCircle(25, 25, 4);
       g.fillStyle(0xfde68a, 1);
-      g.fillCircle(60, 40, 5);
-      g.fillStyle(0x1e293b, 1);
-      g.fillCircle(62, 40, 2);
+      g.fillCircle(24, 25, 1.8);
+    });
+
+    make('predator-telegraph', 100, 70, (g) => {
+      g.clear();
+      // Red aura warning telegraph frame
+      g.fillStyle(0xef4444, 0.4);
+      g.fillEllipse(50, 35, 104, 62);
+      g.lineStyle(3, 0xef4444, 0.9);
+      g.strokeEllipse(50, 35, 100, 58);
+      // Inner predator
+      g.fillStyle(0x0f172a, 1);
+      g.fillEllipse(50, 35, 86, 44);
+      g.fillStyle(0xd97706, 1);
+      g.fillCircle(25, 25, 5);
+    });
+
+    // 7. GLOWING PEARL ORB
+    make('pearl', 40, 40, (g) => {
+      g.clear();
+      // Radial glow rings
+      g.fillStyle(0xfbbf24, 0.25);
+      g.fillCircle(20, 20, 19);
+      g.fillStyle(0xfbbf24, 0.5);
+      g.fillCircle(20, 20, 14);
+      g.fillStyle(0xfef08a, 0.95);
+      g.fillCircle(20, 20, 9);
+      g.fillStyle(0xffffff, 1);
+      g.fillCircle(17, 17, 4);
+    });
+
+    // Dragon & Backgrounds
+    make('dragon-final', 110, 110, (g) => {
+      g.clear();
+      g.fillStyle(0xfbbf24, 1);
+      g.fillEllipse(55, 55, 75, 48);
+      g.fillStyle(0xd97706, 1);
+      g.fillTriangle(25, 55, 5, 40, 5, 70);
+      g.fillStyle(0xffffff, 1);
+      g.fillCircle(70, 45, 6);
+      g.fillStyle(0x020617, 1);
+      g.fillCircle(72, 45, 3);
     });
 
     // Background fallbacks - rich gradients
