@@ -8,7 +8,7 @@ export function HeroSection({ onPlay, onExplore }: { onPlay: () => void; onExplo
       {/* === Full-bleed background image === */}
       <div className="absolute inset-0 z-0">
         <img
-          src="/game/scenes/hero-legend.png"
+          src="/game/scenes/hero-legend.jpg"
           alt="Koi ascendendo à cachoeira do dragão"
           className="w-full h-full object-cover opacity-75"
           onError={(e) => {

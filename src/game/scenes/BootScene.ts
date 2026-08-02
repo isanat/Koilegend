@@ -35,11 +35,11 @@ export class BootScene extends Phaser.Scene {
     this.loadImage('dragon-final', 'game/sprites/dragon-final.png');
 
     // Scenes with relative paths
-    this.loadImage('river-bg-far', 'game/scenes/river-bg-far.png');
-    this.loadImage('river-bg-mid', 'game/scenes/river-bg-mid.png');
-    this.loadImage('river-bg-near', 'game/scenes/river-bg-near.png');
-    this.loadImage('waterfall-bg', 'game/scenes/waterfall-bg.png');
-    this.loadImage('hero-legend', 'game/scenes/hero-legend.png');
+    this.loadImage('river-bg-far', 'game/scenes/river-bg-far.jpg');
+    this.loadImage('river-bg-mid', 'game/scenes/river-bg-mid.jpg');
+    this.loadImage('river-bg-near', 'game/scenes/river-bg-near.jpg');
+    this.loadImage('waterfall-bg', 'game/scenes/waterfall-bg.jpg');
+    this.loadImage('hero-legend', 'game/scenes/hero-legend.jpg');
     this.loadImage('sky-realm', 'game/scenes/sky-realm.png');
 
     // Loading bar
