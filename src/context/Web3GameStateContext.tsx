@@ -104,46 +104,110 @@ export function Web3GameStateProvider({ children }: { children: React.ReactNode 
   const [walletConnected, setWalletConnected] = useState(true);
   const [walletAddress, setWalletAddress] = useState('0x71C...8f9A');
 
-  const [koiBalance, setKoiBalance] = useState(350); // Generous starting balance
-  const [pearlBalance, setPearlBalance] = useState(120);
-
-  const [stagesProgress, setStagesProgress] = useState<Record<number, StageProgress>>(INITIAL_STAGES);
-  const [nftCards, setNftCards] = useState<NFTCardItem[]>(INITIAL_NFT_CARDS);
-  const [lastMiningClaim, setLastMiningClaim] = useState<number>(Date.now() - 3600 * 1000 * 4); // 4 hours ago
-
-  const [stakingDeposits, setStakingDeposits] = useState<StakingDeposit[]>([
-    {
-      id: 'stk-1',
-      amount: 100,
-      durationDays: 90,
-      apy: 28,
-      startDate: Date.now() - 86400 * 1000 * 10,
-      earned: 14.2,
-    },
-  ]);
-
-  const [referralCode] = useState('KOI-LEGEND-992');
-  const [referredCount, setReferredCount] = useState(5);
-  const [referralEarnings, setReferralEarnings] = useState(42.5);
-
-  // Load from localStorage
-  useEffect(() => {
+  const [koiBalance, setKoiBalance] = useState<number>(() => {
+    if (typeof window === 'undefined') return 350;
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.koiBalance !== undefined) setKoiBalance(parsed.koiBalance);
-        if (parsed.pearlBalance !== undefined) setPearlBalance(parsed.pearlBalance);
-        if (parsed.stagesProgress) setStagesProgress(parsed.stagesProgress);
-        if (parsed.nftCards) setNftCards(parsed.nftCards);
-        if (parsed.lastMiningClaim) setLastMiningClaim(parsed.lastMiningClaim);
-        if (parsed.stakingDeposits) setStakingDeposits(parsed.stakingDeposits);
-        if (parsed.referralEarnings) setReferralEarnings(parsed.referralEarnings);
+        if (parsed.koiBalance !== undefined) return parsed.koiBalance;
       }
-    } catch (e) {
-      console.warn('Failed to load saved state:', e);
-    }
-  }, []);
+    } catch {}
+    return 350;
+  });
+
+  const [pearlBalance, setPearlBalance] = useState<number>(() => {
+    if (typeof window === 'undefined') return 120;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.pearlBalance !== undefined) return parsed.pearlBalance;
+      }
+    } catch {}
+    return 120;
+  });
+
+  const [stagesProgress, setStagesProgress] = useState<Record<number, StageProgress>>(() => {
+    if (typeof window === 'undefined') return INITIAL_STAGES;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.stagesProgress) return parsed.stagesProgress;
+      }
+    } catch {}
+    return INITIAL_STAGES;
+  });
+
+  const [nftCards, setNftCards] = useState<NFTCardItem[]>(() => {
+    if (typeof window === 'undefined') return INITIAL_NFT_CARDS;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.nftCards) return parsed.nftCards;
+      }
+    } catch {}
+    return INITIAL_NFT_CARDS;
+  });
+
+  const [lastMiningClaim, setLastMiningClaim] = useState<number>(() => {
+    if (typeof window === 'undefined') return Date.now() - 3600 * 1000 * 4;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.lastMiningClaim) return parsed.lastMiningClaim;
+      }
+    } catch {}
+    return Date.now() - 3600 * 1000 * 4;
+  });
+
+  const [stakingDeposits, setStakingDeposits] = useState<StakingDeposit[]>(() => {
+    if (typeof window === 'undefined')
+      return [
+        {
+          id: 'stk-1',
+          amount: 100,
+          durationDays: 90,
+          apy: 28,
+          startDate: Date.now() - 86400 * 1000 * 10,
+          earned: 14.2,
+        },
+      ];
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.stakingDeposits) return parsed.stakingDeposits;
+      }
+    } catch {}
+    return [
+      {
+        id: 'stk-1',
+        amount: 100,
+        durationDays: 90,
+        apy: 28,
+        startDate: Date.now() - 86400 * 1000 * 10,
+        earned: 14.2,
+      },
+    ];
+  });
+
+  const [referralCode] = useState('KOI-LEGEND-992');
+  const [referredCount] = useState(5);
+  const [referralEarnings, setReferralEarnings] = useState<number>(() => {
+    if (typeof window === 'undefined') return 42.5;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.referralEarnings !== undefined) return parsed.referralEarnings;
+      }
+    } catch {}
+    return 42.5;
+  });
 
   // Save to localStorage
   useEffect(() => {
