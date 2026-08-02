@@ -1,0 +1,10 @@
+# Auto detect text files
+* text=auto
+
+# Explicitly declare binary assets
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+public/game/** binary
