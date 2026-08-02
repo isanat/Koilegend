@@ -107,9 +107,7 @@ export class WaterfallScene extends BaseGameScene {
     });
     this.mistEmitter.setScrollFactor(0).setDepth(8);
 
-    // Rotate koi body to point upward (sprite faces right by default)
-    this.koiBody.setRotation(-Math.PI / 2);
-
+    // Streams and pearls lists
     this.streams = [];
     this.pearls = [];
   }

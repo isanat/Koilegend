@@ -16,8 +16,7 @@
  *   - createScene(): build phase-specific backgrounds, obstacles, etc.
  *   - updateScene(dt): phase-specific spawn + movement + win/lose logic
  *   - getKoiStartPosition(): where the koi spawns
- *   - getKoiDisplaySize(): visual size of the koi sprite
- *   - getKoiHitboxSize(): collision box (derived from display size, single truth)
+ *   - getKoiDisplaySize(): visual size of the koi sprite (hitbox derived automatically)
  *   - getSceneTitle(): { title, subtitle, hint } for title card
  *   - getResultText(status): { title, subtitle } for result card
  *   - getWinPearls(): target pearl count for win condition
@@ -178,6 +177,7 @@ export abstract class BaseGameScene extends Phaser.Scene {
     this.koiGlow = this.add.image(0, 0, 'pearl').setDisplaySize(koiSize.w * 1.4, koiSize.h * 1.4)
       .setTint(0xfbbf24).setAlpha(0.15).setBlendMode('ADD');
     this.koiBody = this.add.image(0, 0, 'koi').setDisplaySize(koiSize.w, koiSize.h);
+    this.koiBody.setFlipX(true);
 
     this.shieldGraphic = this.add.graphics();
     this.shieldGraphic.lineStyle(3, 0x38bdf8, 0.9);
